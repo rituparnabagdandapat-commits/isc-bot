@@ -1,7 +1,17 @@
 # chatbot.py - Sirf CHAT ke liye, NO slash command
 import discord
-from discord.ext import commands
-from groq import get_ai_response
+from discord.ext import command
+import os
+from groq import Groq
+
+client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+
+def get_ai_response(prompt):
+    chat = client.chat.completions.create(
+        messages=[{"role": "user", "content": prompt}],
+        model="llama-3.3-70b-versatile",
+    )
+    return chat.choices[0].message.content
 
 class Chatbot(commands.Cog):
     def __init__(self, bot):
