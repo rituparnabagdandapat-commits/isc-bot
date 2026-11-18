@@ -1,25 +1,45 @@
-name: Deploy ISC Bot
+name: Build ISC Bot
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
   pull_request:
-    branches:
-      - main
+    branches: [ main ]
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
 
-      - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Check files
+      run: |
+        ls -la
+        echo "--- GROQ.py ---"
+        ls -la GROQ.py
+        echo "--- chatbot.py ---"
+        ls -la chatbot.py
+        echo "--- commands.py ---"
+        ls -la commands.py
+        echo "--- main.py ---"
+        ls -la main.py
+
+    - name: Check Python syntax
+      run: |
+        python -m py_compile GROQ.py
+        python -m py_compile chatbot.py
+        python -m py_compile commands.py
+        python -m py_compile main.py
+        echo "All files OK ✅"
