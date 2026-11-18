@@ -1,11 +1,9 @@
 import discord
-import WelcomeMessage
 
 async def setup(bot):
     @bot.event
     async def on_member_join(member):
         channel = discord.utils.get(member.guild.text_channels, name="welcome-user")
-        
         if channel is None:
             print("Could not find #welcome-user channel!")
             return
@@ -17,7 +15,6 @@ async def setup(bot):
         )
         embed.set_thumbnail(url=member.display_avatar.url)
         embed.set_footer(text="Enjoy your stay!")
-        
         await channel.send(embed=embed)
 
     @bot.event
