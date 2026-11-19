@@ -1,8 +1,12 @@
 import discord
+from discord.ext import commands
 
-async def setup(bot):
-    @bot.event
-    async def on_member_join(member):
+class Welcome(commands.Cog):
+    def __init__(self, bot):
+        self.bot = bot
+
+    @commands.Cog.listener()
+    async def on_member_join(self, member):
         channel = discord.utils.get(member.guild.text_channels, name="welcome-user")
         if channel is None:
             print("Could not find #welcome-user channel!")
@@ -17,8 +21,11 @@ async def setup(bot):
         embed.set_footer(text="Enjoy your stay!")
         await channel.send(embed=embed)
 
-    @bot.event
-    async def on_member_remove(member):
+    @commands.Cog.listener()
+    async def on_member_remove(self, member):
         channel = discord.utils.get(member.guild.text_channels, name="welcome-user")
         if channel:
             await channel.send(f"Bye bye {member.name}... We will miss you! 👋")
+
+async def setup(bot):
+    await bot.add_cog(Welcome(bot))
