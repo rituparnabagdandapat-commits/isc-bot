@@ -1,119 +1,115 @@
-import discord
+import discord, asyncio, datetime
 from discord.ext import commands
-from discord import app_commands
-import random, datetime
+from discord import ui
 
+# ---------- TICKET VIEWS ----------
+class GameView(ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+    @ui.button(label="⛏️ Minecraft", style=discord.ButtonStyle.green, custom_id="game_mc")
+    async def mc(self, interaction: discord.Interaction, button: ui.Button):
+        await interaction.response.send_message("⛏️ **Minecraft Creator**\n1. Your Minecraft IGN?\n2. YouTube / TikTok link?\n3. Subs? (Need 100+)\n4. Send 1 best video link")
+    @ui.button(label="🧱 Roblox", style=discord.ButtonStyle.blurple, custom_id="game_rb")
+    async def rb(self, interaction: discord.Interaction, button: ui.Button):
+        await interaction.response.send_message("🧱 **Roblox Creator**\n1. Your Roblox Username?\n2. YouTube / TikTok link?\n3. Subs? (Need 100+)\n4. Send 1 best video link")
+
+class CloseView(ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+    @ui.button(label="🔒 Close Ticket", style=discord.ButtonStyle.red, custom_id="close_ticket")
+    async def close_btn(self, interaction: discord.Interaction, button: ui.Button):
+        await interaction.response.send_message("🔒 Closing in 5s...")
+        await asyncio.sleep(5)
+        try:
+            await interaction.channel.delete()
+        except:
+            pass
+
+class TicketView(ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+    async def create_ticket(self, interaction: discord.Interaction, type_name: str):
+        guild = interaction.guild
+        cat = discord.utils.get(guild.categories, name="Tickets")
+        if not cat:
+            cat = await guild.create_category("Tickets")
+        overwrites = {
+            guild.default_role: discord.PermissionOverwrite(read_messages=False),
+            interaction.user: discord.PermissionOverwrite(read_messages=True, send_messages=True),
+            guild.me: discord.PermissionOverwrite(read_messages=True, send_messages=True)
+        }
+        ch = await guild.create_text_channel(f"ticket-{type_name}-{interaction.user.name}", category=cat, overwrites=overwrites)
+        await interaction.response.send_message(f"Ticket created: {ch.mention}", ephemeral=True)
+        if type_name == "creator":
+            embed = discord.Embed(title="🎥 Content Creator Application", description=f"{interaction.user.mention}\n\n**Requirement: 100+ Subs!**\nIf less than 100, ticket will be closed.\n\nWhat game do you create for?", color=0x00ff00)
+            await ch.send(embed=embed, view=GameView())
+            await ch.send("Staff Controls:", view=CloseView())
+        elif type_name == "report":
+            await ch.send(f"{interaction.user.mention} **🚨 Report**\n1. Who are you reporting? @user\n2. What did they do? + proof screenshot\n3. When did it happen?")
+            await ch.send("Staff Controls:", view=CloseView())
+        else:
+            await ch.send(f"{interaction.user.mention} **🎫 Support**\nWhat do you need help with? Staff will be here soon.")
+            await ch.send("Staff Controls:", view=CloseView())
+    @ui.button(label="🎫 Support", style=discord.ButtonStyle.grey, custom_id="ticket_support")
+    async def support(self, interaction: discord.Interaction, button: ui.Button):
+        await self.create_ticket(interaction, "support")
+    @ui.button(label="🎥 Content Creator", style=discord.ButtonStyle.green, custom_id="ticket_creator")
+    async def creator(self, interaction: discord.Interaction, button: ui.Button):
+        await self.create_ticket(interaction, "creator")
+    @ui.button(label="🚨 Report", style=discord.ButtonStyle.red, custom_id="ticket_report")
+    async def report(self, interaction: discord.Interaction, button: ui.Button):
+        await self.create_ticket(interaction, "report")
+
+# ---------- COG ----------
 class Commands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    # FUN 15
-    @app_commands.command(name="meme", description="Meme bhej")
-    async def meme(self, i): await i.response.send_message("😂 ISC meme king hazir!")
-    @app_commands.command(name="joke", description="Joke suna")
-    async def joke(self, i): await i.response.send_message(random.choice(["Bhai tu itna slow hai, teri shadow bhi tujhe chhod ke bhag gayi! 😂","IndSnprKnfrClan bhi tujhse zyada smart hai! 🔥"]))
-    @app_commands.command(name="8ball", description="Magic 8ball")
-    async def ball(self, i, question: str): await i.response.send_message(f"8Ball: {random.choice(['Haan bhai pakka!','Bilkul nahi!','ISC bolega Haan!'])}")
-    @app_commands.command(name="coinflip", description="Coin flip")
-    async def coin(self, i): await i.response.send_message(f"Coin: {random.choice(['Heads 🔥','Tails 😎'])}")
-    @app_commands.command(name="dice", description="Dice roll")
-    async def dice(self, i): await i.response.send_message(f"Dice: {random.randint(1,6)} 🎲")
-    @app_commands.command(name="ship", description="Ship 2 logo ko")
-    async def ship(self, i, u1: discord.Member, u2: discord.Member): await i.response.send_message(f"💖 {u1.mention} + {u2.mention} = {random.randint(1,100)}% match!")
-    @app_commands.command(name="pp", description="PP size check")
-    async def pp(self, i, u: discord.Member = None): await i.response.send_message(f"{(u or i.user).mention} ka PP: {random.randint(1,15)}cm 😂")
-    @app_commands.command(name="gayrate", description="Gay rate")
-    async def gay(self, i, u: discord.Member = None): await i.response.send_message(f"{(u or i.user).mention} is {random.randint(1,100)}% gay 🏳️‍🌈")
-    @app_commands.command(name="simprate", description="Simp rate")
-    async def simp(self, i, u: discord.Member = None): await i.response.send_message(f"{(u or i.user).mention} is {random.randint(1,100)}% simp 😭")
-    @app_commands.command(name="rizz", description="Rizz rate")
-    async def rizz(self, i, u: discord.Member = None): await i.response.send_message(f"{(u or i.user).mention} ka Rizz: {random.randint(1,100)}% 😎")
-    @app_commands.command(name="compliment", description="Compliment de")
-    async def comp(self, i, u: discord.Member): await i.response.send_message(f"{u.mention} tu ISC ka sabse mast banda hai! 🔥")
-    @app_commands.command(name="insult", description="Funny insult")
-    async def insult(self, i, u: discord.Member): await i.response.send_message(f"{u.mention} bhai tu itna trash hai, dustbin bhi tujhe reject kar de! 😂")
-    @app_commands.command(name="truth", description="Truth")
-    async def truth(self, i): await i.response.send_message("Truth: ISC me sabse zyada bakwas kaun karta hai? 👀")
-    @app_commands.command(name="dare", description="Dare")
-    async def dare(self, i): await i.response.send_message("Dare: Chat me 'Mai ISC ka sabse bada fan hu' likh! 🔥")
-    @app_commands.command(name="quote", description="Quote")
-    async def quote(self, i): await i.response.send_message("🔥 'ISC CLAN never dies!' - IndSnprKnfrClan")
+    # DYNO MOD
+    @commands.command()
+    @commands.has_permissions(ban_members=True)
+    async def ban(self, ctx, member: discord.Member, *, reason="No reason"):
+        await member.ban(reason=reason)
+        await ctx.send(f"🔨 {member.mention} banned | {reason}")
 
-    # INFO 10
-    @app_commands.command(name="ping", description="Ping check")
-    async def ping(self, i): await i.response.send_message(f"Pong! {round(self.bot.latency*1000)}ms 🏓")
-    @app_commands.command(name="serverinfo", description="Server info")
-    async def sinfo(self, i): await i.response.send_message(f"Server: {i.guild.name} | Members: {i.guild.member_count} 🔥")
-    @app_commands.command(name="userinfo", description="User info")
-    async def uinfo(self, i, u: discord.Member = None): u=u or i.user; await i.response.send_message(f"User: {u.name} | ID: {u.id}")
-    @app_commands.command(name="avatar", description="Avatar dekh")
-    async def avatar(self, i, u: discord.Member = None): u=u or i.user; await i.response.send_message(u.display_avatar.url)
-    @app_commands.command(name="banner", description="Banner")
-    async def banner(self, i): await i.response.send_message("ISC CLAN BANNER 🔥")
-    @app_commands.command(name="members", description="Member count")
-    async def members(self, i): await i.response.send_message(f"Total Members: {i.guild.member_count} 🔥")
-    @app_commands.command(name="roles", description="Roles list")
-    async def roles(self, i): await i.response.send_message(", ".join([r.name for r in i.guild.roles[:20]]))
-    @app_commands.command(name="channels", description="Channels")
-    async def channels(self, i): await i.response.send_message(f"Channels: {len(i.guild.channels)}")
-    @app_commands.command(name="botinfo", description="Bot info")
-    async def binfo(self, i): await i.response.send_message("IndSnprKnfrClan | Made for ISC CLAN 🔥 | 51 Commands!")
-    @app_commands.command(name="help", description="Help")
-    async def help_cmd(self, i): await i.response.send_message("Commands: /chat /roast /meme /joke /ping /kick /ban /mute aur 40+ aur! 🔥")
+    @commands.command()
+    @commands.has_permissions(kick_members=True)
+    async def kick(self, ctx, member: discord.Member, *, reason="No reason"):
+        await member.kick(reason=reason)
+        await ctx.send(f"👢 {member.mention} kicked | {reason}")
 
-    # MOD 10
-    @app_commands.command(name="kick", description="Kick kar")
-    async def kick(self, i, u: discord.Member, reason: str="No reason"): await u.kick(reason=reason); await i.response.send_message(f"{u.mention} kicked! 👋")
-    @app_commands.command(name="ban", description="Ban kar")
-    async def ban(self, i, u: discord.Member, reason: str="No reason"): await u.ban(reason=reason); await i.response.send_message(f"{u.mention} banned! 🔨")
-    @app_commands.command(name="unban", description="Unban")
-    async def unban(self, i, user_id: str): await i.guild.unban(discord.Object(id=int(user_id))); await i.response.send_message("Unbanned! ✅")
-    @app_commands.command(name="mute", description="Mute kar")
-    async def mute(self, i, u: discord.Member): await u.timeout(discord.utils.utcnow()+datetime.timedelta(minutes=10)); await i.response.send_message(f"{u.mention} muted 10 min 🤫")
-    @app_commands.command(name="unmute", description="Unmute")
-    async def unmute(self, i, u: discord.Member): await u.timeout(None); await i.response.send_message(f"{u.mention} unmuted! 🔊")
-    @app_commands.command(name="clear", description="Messages clear")
-    async def clear(self, i, amount: int=10): await i.channel.purge(limit=amount); await i.response.send_message(f"{amount} msgs cleared! 🧹", ephemeral=True)
-    @app_commands.command(name="warn", description="Warn de")
-    async def warn(self, i, u: discord.Member, reason: str): await i.response.send_message(f"{u.mention} warned! ⚠️ Reason: {reason}")
-    @app_commands.command(name="slowmode", description="Slowmode")
-    async def slow(self, i, seconds: int): await i.channel.edit(slowmode_delay=seconds); await i.response.send_message(f"Slowmode {seconds}s ⏱️")
-    @app_commands.command(name="lock", description="Channel lock")
-    async def lock(self, i): await i.channel.set_permissions(i.guild.default_role, send_messages=False); await i.response.send_message("Locked! 🔒")
-    @app_commands.command(name="unlock", description="Channel unlock")
-    async def unlock(self, i): await i.channel.set_permissions(i.guild.default_role, send_messages=True); await i.response.send_message("Unlocked! 🔓")
+    @commands.command()
+    @commands.has_permissions(manage_roles=True)
+    async def mute(self, ctx, member: discord.Member, seconds: int = 600):
+        await member.timeout(discord.utils.utcnow() + datetime.timedelta(seconds=seconds))
+        await ctx.send(f"🔇 {member.mention} muted for {seconds}s")
 
-    # ISC 10
-    @app_commands.command(name="isc", description="ISC info")
-    async def isc(self, i): await i.response.send_message("🔥 ISC CLAN - Best Clan Ever! 🔥")
-    @app_commands.command(name="rules", description="Rules")
-    async def rules(self, i): await i.response.send_message("ISC Rules: 1. Respect sabko 2. No spam 3. ISC OP 🔥")
-    @app_commands.command(name="rank", description="Rank")
-    async def rank(self, i, u: discord.Member = None): await i.response.send_message(f"{(u or i.user).mention} Rank: ISC Legend 🔥 | Level: {random.randint(1,50)}")
-    @app_commands.command(name="leaderboard", description="Leaderboard")
-    async def lb(self, i): await i.response.send_message("🏆 ISC Leaderboard: 1. Owner 2. Admin 3. Tu! 🔥")
-    @app_commands.command(name="daily", description="Daily reward")
-    async def daily(self, i): await i.response.send_message(f"{i.user.mention} ko {random.randint(50,200)} ISC Coins mile! 🪙")
-    @app_commands.command(name="balance", description="Balance")
-    async def bal(self, i): await i.response.send_message(f"{i.user.mention} Balance: {random.randint(100,5000)} coins 🪙")
-    @app_commands.command(name="gamble", description="Gamble")
-    async def gamble(self, i, amount: int): await i.response.send_message(f"{'Jeet gaya! 🔥 +' if random.random()>0.5 else 'Haar gaya 😭 -'}{amount} coins!")
-    @app_commands.command(name="fight", description="Fight")
-    async def fight(self, i, u: discord.Member): await i.response.send_message(f"🥊 {i.user.mention} vs {u.mention} -> Winner: {random.choice([i.user.mention, u.mention])} 🔥")
-    @app_commands.command(name="hug", description="Hug")
-    async def hug(self, i, u: discord.Member): await i.response.send_message(f"{i.user.mention} ne {u.mention} ko hug diya! 🤗")
-    @app_commands.command(name="slap", description="Slap")
-    async def slap(self, i, u: discord.Member): await i.response.send_message(f"{i.user.mention} ne {u.mention} ko thappad mara! 👋😂")
+    @commands.command()
+    @commands.has_permissions(manage_messages=True)
+    async def purge(self, ctx, amount: int):
+        await ctx.channel.purge(limit=amount+1)
+        await ctx.send(f"🧹 Deleted {amount} messages", delete_after=3)
 
-    # UTILITY 4
-    @app_commands.command(name="poll", description="Poll banao")
-    async def poll(self, i, q: str): await i.response.send_message(f"📊 Poll: {q}\n👍 Haan | 👎 Nahi")
-    @app_commands.command(name="announce", description="Announce")
-    async def announce(self, i, msg: str): await i.response.send_message(f"📢 ANNOUNCEMENT: {msg}")
-    @app_commands.command(name="say", description="Bot se bulwa")
-    async def say(self, i, msg: str): await i.response.send_message(msg)
-    @app_commands.command(name="embed", description="Embed bhej")
-    async def embed(self, i, title: str, desc: str): e=discord.Embed(title=title, description=desc, color=0xFF0000); await i.response.send_message(embed=e)
+    # /setup-tickets SLASH
+    @discord.app_commands.command(name="setup-tickets", description="Setup the ticket panel with 3 buttons")
+    @discord.app_commands.describe(channel="Where to send the panel?")
+    async def setup_tickets(self, interaction: discord.Interaction, channel: discord.TextChannel = None):
+        if not interaction.user.guild_permissions.administrator:
+            await interaction.response.send_message("Only Admin can do this!", ephemeral=True)
+            return
+        target = channel or interaction.channel
+        embed = discord.Embed(title="🎫 ISC Support", description="Click a button to open a ticket\n\n🎫 **Support** - Need help\n🎥 **Content Creator** - Need 100+ Subs | Minecraft / Roblox\n🚨 **Report** - Report someone", color=0x00ff00)
+        await target.send(embed=embed, view=TicketView())
+        await interaction.response.send_message(f"Ticket panel sent in {target.mention} ✅", ephemeral=True)
+
+    @discord.app_commands.command(name="close", description="Close this ticket")
+    async def close(self, interaction: discord.Interaction):
+        if "ticket-" in interaction.channel.name:
+            await interaction.response.send_message("🔒 Closing in 5s...")
+            await asyncio.sleep(5)
+            await interaction.channel.delete()
+        else:
+            await interaction.response.send_message("This is not a ticket!", ephemeral=True)
 
 async def setup(bot):
     await bot.add_cog(Commands(bot))
