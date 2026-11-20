@@ -8,7 +8,7 @@ client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 def get_ai_response(prompt):
     chat = client.chat.completions.create(
         messages=[{"role": "user", "content": prompt}],
-        model="llama-3.3-70b-versatile",
+        model="llama-3.1-8b-instant",
     )
     return chat.choices[0].message.content
 
@@ -25,6 +25,11 @@ class Chatbot(commands.Cog):
             if prompt:
                 reply = get_ai_response(prompt)
                 await message.reply(reply)
+              
 
 async def setup(bot):
     await bot.add_cog(Chatbot(bot))
+try:
+    reply = get_ai_response(prompt)
+except Exception as e:
+    reply = "Yo I'm back, my AI was down for a sec, say again? 👀"
