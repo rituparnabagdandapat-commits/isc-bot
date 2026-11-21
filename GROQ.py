@@ -24,7 +24,7 @@ Keep replies short, funny and savage. Max 2-3 lines.
 async def get_ai_response(user_message: str) -> str:
     try:
         chat = client.chat.completions.create(
-            model="llama-3.1-8b-instant"
+            model="llama-3.1-8b-instant", 
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": user_message}
