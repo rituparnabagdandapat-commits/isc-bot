@@ -1,27 +1,37 @@
-# main.py - IndSnpnrKnfrClan Bot
 import discord
 from discord.ext import commands
 import os
+import asyncio
+from dotenv import load_dotenv
+
+load_dotenv()
+
+TOKEN = os.getenv("DISCORD_TOKEN")
 
 intents = discord.Intents.default()
-intents.members = True
 intents.message_content = True
+intents.members = True
 intents.guilds = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 @bot.event
 async def on_ready():
-    print(f"Logged in as {bot.user} 🔥")
-    await bot.load_extension("chatbot")
-    await bot.load_extension("commands")
-    await bot.load_extension("WelcomeMessage")
-    synced = await bot.tree.sync()
-    print(f"Synced {len(synced)} cmds ✅")
-    print("IndSnpnrKnfrClan is ONLINE!")
+    print(f"Logged in as {bot.user} | ID: {bot.user.id}")
+    try:
+        synced = await bot.tree.sync()
+        print(f"Synced {len(synced)} commands")
+    except Exception as e:
+        print(e)
 
-@bot.event
-async def on_message(message):
-    await bot.process_commands(message)
+async def main():
+    async with bot:
+        # Load ALL your files
+        await bot.load_extension("tickets")
+        await bot.load_extension("chatbot")
+        await bot.load_extension("commands")
+        await bot.load_extension("welcomemessage")
+        print("Loaded: tickets, chatbot, commands, welcomemessage ✅")
+        await bot.start(TOKEN)
 
-bot.run(os.getenv("TOKEN"))
+asyncio.run(main())
